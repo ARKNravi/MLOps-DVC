@@ -7,35 +7,47 @@ Dalam kasus ini, kita akan menggunakan dataset "Wine Quality" dari [UCI Machine 
 ### Prasyarat
 1. **Instalasi Git** – DVC bekerja di atas Git, jadi pastikan Git sudah terpasang.
 2. **Python dan Dependensi** – Instal Python, scikit-learn, pandas, dll.
-3. **DVC** – Install DVC dengan perintah:
-   ```bash
-   pip install dvc
-   ```
-4. **Akun Supabase** – Buat akun di [Supabase](https://supabase.com/) dan buat proyek baru untuk penyimpanan.
+3. **Akun Supabase** – Buat akun di [Supabase](https://supabase.com/) dan buat proyek baru untuk penyimpanan.
 
 ### Langkah-langkah
 
-#### 1. Clone Repository
-- Clone repository yang sudah ada dari GitHub:
+#### 1. Buat Project Directory
+- Buat direktori proyek baru dan pindah ke direktori tersebut:
 ```bash
-git clone https://github.com/ARKNravi/MLOps-DVC.git
-cd MLOps-DVC
+mkdir wine-quality-dvc
+cd wine-quality-dvc
 ```
 
-#### 2. Inisialisasi Project
-- Inisialisasi DVC di dalam direktori proyek:
+#### 2. Buat File Requirements
+- Buat file `requirements.txt` untuk mencatat dependensi yang diperlukan oleh proyek ini:
+```text
+pandas
+scikit-learn
+joblib
+dvc
+# Untuk dukungan S3 dengan DVC
+dvc[s3]
+```
+- Install semua dependensi menggunakan pip:
 ```bash
+pip install -r requirements.txt
+```
+
+#### 3. Inisialisasi Project
+- Inisialisasi Git dan DVC di dalam direktori proyek:
+```bash
+git init
 dvc init
 ```
 
-#### 3. Mendownload Dataset
+#### 4. Mendownload Dataset
 - Download dataset wine quality dari UCI dan simpan di folder `data`.
 ```bash
 mkdir data
 curl https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv -o data/winequality-red.csv
 ```
 
-#### 4. Versioning Dataset dengan DVC
+#### 5. Versioning Dataset dengan DVC
 - Tambahkan dataset ke dalam version control DVC:
 ```bash
 dvc add data/winequality-red.csv
@@ -43,10 +55,12 @@ dvc add data/winequality-red.csv
 - Commit perubahan pada Git:
 ```bash
 git add data/winequality-red.csv.dvc .gitignore
+```
+```bash
 git commit -m "Add wine quality dataset"
 ```
 
-#### 5. Konfigurasi Remote Storage di Supabase
+#### 6. Konfigurasi Remote Storage di Supabase
 - Buat bucket di Supabase untuk penyimpanan.
 - Buat access key untuk mengakses bucket tersebut.
 - Tambahkan remote storage ke DVC:
@@ -64,17 +78,26 @@ dvc remote modify supabase-remote secret_access_key <supabase-secret-key>
 dvc push
 ```
 
-#### 6. Menggabungkan Dataset Tambahan
-- Buat file CSV baru bernama `winequality-red-additional.csv` dengan data tambahan di folder `data/`.
+#### 7. Menggabungkan Dataset Tambahan
+- Jika file `winequality-red-additional.csv` tidak ada, skrip akan membuat file tersebut secara otomatis dengan beberapa data tambahan.
+- Jika file `winequality-red-combined.csv` tidak ada, skrip berikut akan membuatnya secara otomatis.
 - Buat file `merge_data.py` untuk menggabungkan dataset lama dan dataset tambahan:
 ```python
+import os
 import pandas as pd
 
 # Load original dataset
 data_original = pd.read_csv('data/winequality-red.csv', sep=';')
 
-# Load additional dataset
-data_additional = pd.read_csv('data/winequality-red-additional.csv', sep=';')
+# Check if additional dataset exists or create it
+additional_file_path = 'data/winequality-red-additional.csv'
+if not os.path.exists(additional_file_path):
+    # Create a sample additional dataset if it doesn't exist
+    os.makedirs(os.path.dirname(additional_file_path), exist_ok=True)
+    data_additional = data_original.sample(5, random_state=42)  # Create 5 sample rows for additional data
+    data_additional.to_csv(additional_file_path, sep=';', index=False)
+else:
+    data_additional = pd.read_csv(additional_file_path, sep=';')
 
 # Merge both datasets
 data_combined = pd.concat([data_original, data_additional])
@@ -89,7 +112,7 @@ print("Dataset has been successfully combined and saved.")
 python merge_data.py
 ```
 
-#### 7. Membuat Model Sederhana
+#### 8. Membuat Model Sederhana
 - Buat file `train.py` untuk melatih model sederhana dengan scikit-learn:
 ```python
 import pandas as pd
@@ -118,7 +141,7 @@ mkdir model
 python train.py
 ```
 
-#### 8. Versioning Model dengan DVC
+#### 9. Versioning Model dengan DVC
 - Tambahkan model yang dilatih ke dalam DVC:
 ```bash
 dvc add model/model.pkl
@@ -126,16 +149,18 @@ dvc add model/model.pkl
 - Commit perubahan ke Git:
 ```bash
 git add model/model.pkl.dvc
+```
+```bash
 git commit -m "Add trained model"
 ```
 
-#### 9. Pushing Model ke Remote
+#### 10. Pushing Model ke Remote
 - Push model yang telah dilatih ke remote storage di Supabase:
 ```bash
 dvc push
 ```
 
-#### 10. Menggunakan DVC untuk Reproduksi dan Versioning
+#### 11. Menggunakan DVC untuk Reproduksi dan Versioning
 - Buat file `dvc.yaml` untuk mendefinisikan pipeline:
 ```yaml
 stages:
@@ -159,6 +184,9 @@ stages:
 ```bash
 git add dvc.yaml
 ```
+```bash
+git commit -m "Add DVC pipeline"
+```
 - Jalankan pipeline untuk memastikan semuanya up-to-date:
 ```bash
 dvc repro
@@ -169,7 +197,7 @@ dvc repro
 dvc push
 ```
 
-#### 11. Bukti DVC Berhasil Dijalankan
+#### 12. Bukti DVC Berhasil Dijalankan
 Contoh output saat menjalankan perintah `dvc repro` dan `dvc push` untuk membuktikan bahwa DVC berhasil dijalankan:
 ```bash
 $ dvc repro
@@ -273,6 +301,5 @@ Dalam demonstrasi ini, Anda belajar:
 Dengan DVC, pengelolaan dataset dan model menjadi lebih efisien, reproducible, dan mudah untuk dikerjakan secara kolaboratif.
 
 ### Screenshot Bukti
-![image](https://github.com/user-attachments/assets/9f64df4a-74aa-43ee-8280-72a43661f5c1)
-
+Tambahkan screenshot dari output untuk memperkuat bukti bahwa semua langkah telah berhasil dijalankan.
 
