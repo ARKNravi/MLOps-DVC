@@ -1,0 +1,16 @@
+stages:
+    merge:
+        cmd: python merge-data.py
+        deps:
+            - data/winequality-red.csv
+            - data/winequality-red-additional.csv
+        outs:
+            - data/winequality-red-combined.csv
+
+    train:
+        cmd: python train.py
+        deps:
+            - data/winequality-red-combined.csv
+            - train.py
+        outs:
+            - model/model.pkl

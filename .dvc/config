@@ -1,0 +1,7 @@
+[core]
+    remote = supabase-remote
+['remote "supabase-remote"']
+    url = s3://DVC-MLOps
+    endpointurl = https://zyzahbhyrgrsakuwwdjr.supabase.co/storage/v1/s3
+    access_key_id = 586f7fe46ac93797270ea9092289464c
+    secret_access_key = 4d9f50ba10e1906a5369d04d19350c7d33308109f6076ed8734921ab3342b7f3

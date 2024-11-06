@@ -1,0 +1,34 @@
+schema: '2.0'
+stages:
+  train:
+    cmd: python train.py
+    deps:
+    - path: data/winequality-red-combined.csv
+      hash: md5
+      md5: 8fc996831743724f18f467e7e342cff6
+      size: 93949
+    - path: train.py
+      hash: md5
+      md5: ef6426628dcd1bf3b37f791c76550d30
+      size: 516
+    outs:
+    - path: model/model.pkl
+      hash: md5
+      md5: 43c6cfab513d131520d3498816f0537b
+      size: 1200
+  merge:
+    cmd: python merge-data.py
+    deps:
+    - path: data/winequality-red-additional.csv
+      hash: md5
+      md5: 39756cf7d5ea6552423eedb60943fad6
+      size: 497
+    - path: data/winequality-red.csv
+      hash: md5
+      md5: 2daeecee174368f8a33b82c8cccae3a5
+      size: 84199
+    outs:
+    - path: data/winequality-red-combined.csv
+      hash: md5
+      md5: 8fc996831743724f18f467e7e342cff6
+      size: 93949
